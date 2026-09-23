@@ -128,10 +128,11 @@ class DeltaCalc:
             frame_cal, width=10, background=self.service.purple, foreground='white', borderwidth=1,
             headersbackground=self.service.bg_color, headersforeground='white',
             selectbackground=self.service.cian, selectforeground='white',
-            date_pattern='dd/MM/yyyy', font=self.service.default_font
+            date_pattern='dd/MM/yyyy', font=self.service.default_font,
+            state="readonly"
         )
         self.cal_vencimento.pack(side="right")
-
+        self.cal_vencimento.bind("<<DateEntrySelected>>", lambda e: self.master.focus_set())
         self.entry_r = self._criar_linha_entrada(self.main_frame, "Taxa de Juros Selic/DI (%):", "13.75")
 
         tk.Frame(self.main_frame, bg=self.service.border_color, height=1).pack(fill="x", pady=20)
