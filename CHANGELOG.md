@@ -14,3 +14,11 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ### Fixed
 - Calendar of interface when used for two or more times stop working, solved and now is working as expected
+
+## [1.0.2] - 2026-09-22
+
+### Change
+- Method to show calendar on interface
+
+### Fixed
+- Calendar bug of focus
