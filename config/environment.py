@@ -16,3 +16,6 @@ class DeltaCalc:
     border_color = "#464646"
     default_font = ("Segoe UI", 10)
     title_font = ("Segoe UI", 12, "bold")
+    selic_url = "https://brasilapi.com.br/api/taxas/v1/"
+    selic_tag = "Selic"
+

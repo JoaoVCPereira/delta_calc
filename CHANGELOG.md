@@ -22,3 +22,8 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ### Fixed
 - Calendar bug of focus
+
+## [1.1.0] - 2026-09-22
+
+### Change
+- Method to instance Selic tax, now get that value by BrasilAPI
