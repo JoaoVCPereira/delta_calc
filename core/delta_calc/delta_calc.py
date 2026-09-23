@@ -4,8 +4,8 @@ import os
 from tkinter import messagebox
 import math
 import ctypes
-from datetime import date, timedelta
-from tkcalendar import DateEntry
+from datetime import date, timedelta, datetime
+from tkcalendar import Calendar
 from utils import utils
 
 class DeltaCalc:
@@ -124,15 +124,18 @@ class DeltaCalc:
         frame_cal.pack(fill="x", pady=5)
         tk.Label(frame_cal, text="Data de Vencimento:", font=self.service.default_font, bg=self.service.bg_color, fg=self.service.text_color).pack(side="left")
 
-        self.cal_vencimento = DateEntry(
-            frame_cal, width=10, background=self.service.purple, foreground='white', borderwidth=1,
-            headersbackground=self.service.bg_color, headersforeground='white',
-            selectbackground=self.service.cian, selectforeground='white',
-            date_pattern='dd/MM/yyyy', font=self.service.default_font,
-            state="readonly"
+        # Variável para armazenar a data
+        self.var_data = tk.StringVar(value=date.today().strftime("%d/%m/%Y"))
+        
+        # Campo de texto interativo que abre o popup
+        self.entry_vencimento = tk.Entry(
+            frame_cal, textvariable=self.var_data, font=self.service.default_font, 
+            width=12, relief="solid", bd=1, highlightbackground=self.service.border_color, 
+            highlightcolor=self.service.cian, state="readonly", cursor="hand2", justify="center"
         )
-        self.cal_vencimento.pack(side="right")
-        self.cal_vencimento.bind("<<DateEntrySelected>>", lambda e: self.master.focus_set())
+        self.entry_vencimento.pack(side="right")
+        self.entry_vencimento.bind("<Button-1>", self._abrir_popup_calendario)
+
         self.entry_r = self._criar_linha_entrada(self.main_frame, "Taxa de Juros Selic/DI (%):", "13.75")
 
         tk.Frame(self.main_frame, bg=self.service.border_color, height=1).pack(fill="x", pady=20)
@@ -168,6 +171,39 @@ class DeltaCalc:
         self.lbl_resultado_call = self._criar_linha_resultado(self.main_frame, "Delta da Call:")
         self.lbl_resultado_put = self._criar_linha_resultado(self.main_frame, "Delta da Put:")
 
+    def _abrir_popup_calendario(self, event=None):
+        top = tk.Toplevel(self.master)
+        top.title("Selecione a Data")
+        top.configure(bg=self.service.bg_color)
+        
+        x = self.master.winfo_rootx() + 50
+        y = self.master.winfo_rooty() + 150
+        top.geometry(f"+{x}+{y}")
+        
+        top.grab_set() 
+        top.focus_set()
+
+        cal = Calendar(
+            top, selectmode='day', date_pattern='dd/MM/yyyy',
+            background=self.service.purple, foreground='white', borderwidth=1,
+            headersbackground=self.service.bg_color, headersforeground='white',
+            selectbackground=self.service.cian, selectforeground='white',
+            font=self.service.default_font
+        )
+        cal.pack(padx=10, pady=10)
+
+        def confirmar_data():
+            self.var_data.set(cal.get_date())
+            top.destroy()
+
+        btn_confirmar = tk.Button(
+            top, text="Confirmar Seleção", font=("Segoe UI", 10, "bold"),
+            bg=self.service.cian, fg="white", relief="flat", 
+            activebackground=self.service.purple, activeforeground="white", 
+            cursor="hand2", command=confirmar_data, pady=5
+        )
+        btn_confirmar.pack(fill="x", padx=10, pady=(0, 10))
+
     # --- MÉTODOS DE AÇÃO ---
     def _on_enter(self, e):
         self.btn_calcular['background'] = self.service.purple
@@ -182,7 +218,8 @@ class DeltaCalc:
             r_percentual = float(self.entry_r.get().replace(',', '.'))
             preco_mercado = float(self.entry_preco_mercado.get().replace(',', '.'))
             
-            data_vencimento = self.cal_vencimento.get_date()
+            data_str = self.var_data.get()
+            data_vencimento = datetime.strptime(data_str, "%d/%m/%Y").date()
             t_dias = self._calcular_dias_uteis(data_vencimento)
             is_call = (self.var_tipo.get() == "Call")
 
