@@ -1,21 +1,36 @@
-import logging
-import tkinter as tk
-import os
-from tkinter import messagebox
-import math
 import ctypes
-from datetime import date, timedelta, datetime
+import json
+import logging
+import math
+import os
+import tkinter as tk
+from datetime import date, datetime, timedelta
+from tkinter import messagebox
+
+import requests
 from tkcalendar import Calendar
+
 from utils import utils
+
 
 class DeltaCalc:
     def __init__(self, master,service, logger:logging.Logger):
         self.master = master
         self.service = service
         self.logger = logger
+        self.selic = self._get_selic()
         
         self._configurar_janela()
         self._construir_interface()
+
+    def _get_selic(self):
+        selic = "0"
+        resp = json.loads(requests.get(self.service.selic_url).content)
+        for data in resp:
+            if data.get('nome')==self.service.selic_tag:
+                selic = str(data.get('valor'))
+        return selic
+
 
     def _configurar_janela(self):
         self.master.title("Delta")
@@ -136,7 +151,7 @@ class DeltaCalc:
         self.entry_vencimento.pack(side="right")
         self.entry_vencimento.bind("<Button-1>", self._abrir_popup_calendario)
 
-        self.entry_r = self._criar_linha_entrada(self.main_frame, "Taxa de Juros Selic/DI (%):", "13.75")
+        self.entry_r = self._criar_linha_entrada(self.main_frame, "Taxa de Juros Selic/DI (%):", self.selic)
 
         tk.Frame(self.main_frame, bg=self.service.border_color, height=1).pack(fill="x", pady=20)
 
