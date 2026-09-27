@@ -2,14 +2,12 @@ import logging
 
 from utils import utils
 from config.environment import Logging
-from config.environment import DeltaCalc
+from config.environment import DeltaCalc, SERVICES
 
 _LOGGING_LEVEL_FULL = Logging.logging_level_full
 _LOGGING_FILE_FULL = Logging.logging_path_full
 
-SERVICES = {
-    DeltaCalc.name:DeltaCalc.cron
-}
+
 
 def config_logger():
     utils.create_if_not_exists(_LOGGING_FILE_FULL)

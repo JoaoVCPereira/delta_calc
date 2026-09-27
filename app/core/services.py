@@ -1,8 +1,8 @@
 import gc
 import logging
-import tkinter as tk
+import flet as ft
 
-from core.delta_calc.delta_calc import DeltaCalc
+from core.design_engine.design_engine import DesignEngine
 
 class DeltaCalcService:
     def __init__(self, service):
@@ -12,10 +12,14 @@ class DeltaCalcService:
     def run(self):
         try:
             self.logger.info(f'[{self.service.name}] Starting...')
-            root = tk.Tk()
-            service = DeltaCalc(root,self.service,self.logger)
-            root.mainloop()
+            
+            def main(page: ft.Page):
+                app = DesignEngine(page, self.service, self.logger)
+            
+            ft.run(main)
+            
             self.logger.info(f'[{self.service.name}] Finished...')
         except Exception as e:
             self.logger.error(f'[{self.service.name}] Error...\n{str(e)}')
-        gc.collect()
+        finally:
+            gc.collect()
