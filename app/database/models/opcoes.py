@@ -23,6 +23,7 @@ class Opcoes(Base):
     boleta = relationship("Boletas", back_populates="opcoes")
 
     def from_schema(self, schema: OpcoesDB):
+        self.opcao_id = schema.opcao_id
         self.ticket = schema.ticket
         self.stock_price = schema.stock_price
         self.strike_price = schema.strike_price
@@ -33,6 +34,8 @@ class Opcoes(Base):
         self.implicit_vol = schema.implicit_vol
         self.delta = schema.delta
         self.boleta_id = schema.boleta_id
+        self.created = schema.created
+        self.updated = schema.updated
         return self
 
     def to_schema(self) -> OpcoesDB:

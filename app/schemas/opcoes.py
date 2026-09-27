@@ -14,3 +14,5 @@ class OpcoesDB(BaseModel):
     implicit_vol: float
     delta: float    
     boleta_id: Optional[int] = None
+    created: Optional[datetime]=None
+    updated: Optional[datetime]=None

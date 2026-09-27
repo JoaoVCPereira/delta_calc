@@ -25,17 +25,18 @@ class BoletasDAO:
                 self.db.delete(data)
             self.db.commit()
             if DBOperationType.CREATE == operation_type:
-                message = f'Added: {data.ticket}'
+                message = f'Added: {data.boleta_id}'
             elif DBOperationType.UPDATE == operation_type:
-                message = f'Updated: {data.ticket}'
+                message = f'Updated: {data.boleta_id}'
             elif DBOperationType.DELETE == operation_type:
-                message = f'Deleted: {data.ticket}'
-            self.logger.debug(f'[{self.service_name.upper()}][CREATE_CLIENT_DAO] {message}')
+                message = f'Deleted: {data.boleta_id}'
+            self.logger.debug(f'[{self.service_name.upper()}][CREATE_BOLETA_DAO] {message}')
             response.status = True
+            response.message = message
         
         except Exception as e:
             self.db.rollback()
-            self.logger.warning(f'[{self.service_name.upper()}][CREATE_CLIENT_DAO] Rolled back: {data.ticket} - Error: {str(e)}')
+            self.logger.warning(f'[{self.service_name.upper()}][CREATE_BOLETA_DAO] Rolled back: {data.ticket} - Error: {str(e)}')
             
         return response, data
     
@@ -43,6 +44,7 @@ class BoletasDAO:
         data = BoletasModel().from_schema(data_db)
         operation_type = DBOperationType.CREATE
         response, data = self.submit(data,operation_type)
+        self.logger.info(f"Criou a boleta: {data.boleta_id}")
         insert_data: BoletasDB = data.to_schema()
         return response, insert_data
 

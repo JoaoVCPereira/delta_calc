@@ -16,6 +16,7 @@ class DesignEngine:
         self.helper = Helper(self.service,self.logger)
             
         self.selic = self.helper._get_selic()
+        self.boleta_id = None
         self._setup_page()
         self._init_components()
         self._build_layout()
@@ -84,7 +85,7 @@ class DesignEngine:
         self.btn_calcular = ft.Container(
             content=ft.Text("CALCULAR VOLATILIDADE\nE DELTA", color=ft.Colors.WHITE, text_align=ft.TextAlign.CENTER, weight=ft.FontWeight.BOLD),
             bgcolor=self.service.button_color,
-            width=300,
+            width=200,
             height=60,
             border_radius=10,
             alignment=ft.Alignment.CENTER,
@@ -97,17 +98,28 @@ class DesignEngine:
 
         self.tabela_historico = ft.Column(alignment=ft.MainAxisAlignment.CENTER, spacing=8)
 
-        # Adicionar opcao a boleta
         self.btn_add_boleta = ft.Container(
             content=ft.Text("ADICIONAR A BOLETA", color=ft.Colors.WHITE, text_align=ft.TextAlign.CENTER, weight=ft.FontWeight.BOLD),
             bgcolor=self.service.button_color,
-            width=300,
+            width=200,
             height=60,
             border_radius=10,
             alignment=ft.Alignment.CENTER,
-            on_click=self._process_calculation,# executar adicionar a boleta e as opcoes
+            on_click=self._add_to_boleta,
             ink=True
         )
+        self.btn_new_boleta = ft.Container(
+            content=ft.Text("NOVA BOLETA", color=ft.Colors.WHITE, text_align=ft.TextAlign.CENTER, weight=ft.FontWeight.BOLD),
+            bgcolor=self.service.button_color,
+            width=120,
+            height=30,
+            border_radius=10,
+            alignment=ft.Alignment.CENTER,
+            on_click=self._new_boleta,
+            ink=True
+        )
+
+
 
     def _update_history_table(self):
         list_last_5_opcoes = self.helper.get_last_5_opcoes()
@@ -173,47 +185,38 @@ class DesignEngine:
                 ], spacing=8)
             )
             historico_controls.append(ft.Row([linha_dados], alignment=ft.MainAxisAlignment.CENTER))
-
-        # Atualiza a interface da tabela dinamicamente
         self.tabela_historico.controls.clear()
         self.tabela_historico.controls.extend(historico_controls)
 
     def _build_layout(self):
         self.page.add(
             ft.Column([
-                # Top Section
                 ft.Row([self.inp_ticket], alignment=ft.MainAxisAlignment.CENTER),
                 ft.Row([self.inp_preco_acao, self.inp_preco_strike], alignment=ft.MainAxisAlignment.CENTER),
                 ft.Row([self.inp_vencimento], alignment=ft.MainAxisAlignment.CENTER),
                 ft.Row([self.inp_taxa_selic], alignment=ft.MainAxisAlignment.CENTER),
                 
                 ft.Divider(height=30, color=self.service.border_color),
-                
-                # Bottom Section
+
                 ft.Row([
                     self.radio_tipo,
                     self.inp_preco_opcao
-                ], alignment=ft.MainAxisAlignment.SPACE_EVENLY),
+                ], alignment=ft.MainAxisAlignment.CENTER),
                 
                 ft.Container(height=10),
-                ft.Row([self.btn_calcular], alignment=ft.MainAxisAlignment.CENTER),
-                ft.Container(height=20),
+                ft.Row([self.btn_calcular,self.btn_add_boleta], alignment=ft.MainAxisAlignment.CENTER),
+                ft.Row([self.btn_new_boleta], alignment=ft.MainAxisAlignment.CENTER),
+                ft.Container(height=10),
                 
-                # Results Section
-                ft.Row([
-                    ft.Column([self.res_vol], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=1),
-                    ft.Column([self.res_delta], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=1)
-                ]),
+                ft.Row([self.res_vol,self.res_delta], alignment=ft.MainAxisAlignment.CENTER),
 
                 ft.Divider(height=30, color=self.service.border_color),
 
-                # Tabela de Histórico (Contêiner vazio que será preenchido)
                 self.tabela_historico
                 
             ], spacing=15, scroll=ft.ScrollMode.AUTO)
         )
         
-        # Faz a carga inicial dos dados assim que a tela abre
         self._update_history_table()
 
     def _on_date_selected(self, e):
@@ -228,6 +231,12 @@ class DesignEngine:
         self.page.snack_bar.open = True
         self.logger.error(f"[{self.service.name}]Error: {message}")
         self.page.update()
+
+    def _add_to_boleta(self,e):
+        self.boleta_id = self.helper._save_boleta(data_opcao=self.data_opcao,id_boleta=self.boleta_id)
+
+    def _new_boleta(self,e):
+        self.boleta_id = self.helper._new_boleta(data_opcao=self.data_opcao)
     
     def _process_calculation(self, e):
         try:
@@ -254,12 +263,10 @@ class DesignEngine:
             vol_arredondada = math.ceil(vol_percent * 100) / 100.0
             delta_arredondado = math.ceil(delta * 100) / 100.0
 
-            # Preenche os campos da interface
             self.res_vol.value = f"{vol_arredondada:.2f}%"
             self.res_delta.value = f"{delta_arredondado:.2f}"
             
-            # Monta os dados utilizando as variáveis NUMÉRICAS já tratadas e validadas
-            data_opcao = {
+            self.data_opcao = {
                 "ticket": self.inp_ticket.value,
                 "stockPrice": S,
                 "strikePrice": K,
@@ -267,11 +274,12 @@ class DesignEngine:
                 "selic": r_percentual,
                 "operationType": self.radio_tipo.value,
                 "executionDate": self.inp_vencimento.value,
-                "implicitVol": vol_arredondada, # Valor numérico puro
-                "delta": delta_arredondado # Valor numérico puro
+                "implicitVol": vol_arredondada, 
+                "delta": delta_arredondado 
             }
             
-            added_opcao = self.helper._save_opcao(data_opcao=data_opcao)
+            added_opcao = self.helper._save_opcao(data_opcao=self.data_opcao)
+            self.logger.info(f"[{self.service.name}]{added_opcao.message}||{added_opcao.status}")
             
             # Recalcula a tabela
             self._update_history_table()

@@ -32,7 +32,6 @@ class Helper:
 
     def _save_opcao(self,data_opcao:dict)->Response:
         response_db = Response()
-        self.logger.info(json.dumps(data_opcao,indent=2,ensure_ascii=False))
         if not isinstance(data_opcao.get("executionDate"),datetime):
             execution_date=datetime.strptime(data_opcao.get("executionDate"),"%d/%m/%Y")
             data_opcao["executionDate"]=execution_date
@@ -51,7 +50,6 @@ class Helper:
             with conn.open_session() as session:
                 opcoes_dao:OpcoesDAO = OpcoesDAO(self.logger,self.service.name,session)                
                 response_db,data = opcoes_dao.create(data_db=opcao_schema)
-                self.logger.info(f"[{self.service.name}]Response DB: {response_db.message} | Data: {data.opcao_id}")
         return response_db
 
     def get_last_5_opcoes(self):
@@ -61,3 +59,38 @@ class Helper:
                 data = opcoes_dao.get_last_5_opcoes()
                 self.logger.info(f"[{self.service.name}]Data: {data.opcao_id}")
         return data
+
+    def _save_boleta(self,data_opcao:dict,id_boleta:int|None = None)->int:
+        response_db = Response()
+        if not id_boleta:
+            id_boleta=self._new_boleta()
+        self.logger.info(f"ID BOLETA: {id_boleta}")
+        data_opcao_from_db = self.get_last_5_opcoes()[-1]
+        opcao_schema = OpcoesSchema(
+            opcao_id=data_opcao_from_db.opcao_id,
+            ticket=data_opcao.get("ticket"),
+            stock_price=data_opcao.get("stockPrice"),
+            strike_price=data_opcao.get("strikePrice"),
+            opcao_price=data_opcao.get("opcaoPrice"),
+            selic=data_opcao.get("selic"),
+            operation_type=data_opcao.get("operationType"),
+            execution_date=data_opcao.get("executionDate"),
+            implicit_vol=data_opcao.get("implicitVol"),
+            delta=data_opcao.get("delta"),
+            boleta_id=id_boleta
+        )
+        with Connection(db,self.table_opcoes) as conn:
+            with conn.open_session() as session:
+                opcoes_dao:OpcoesDAO = OpcoesDAO(self.logger,self.service.name,session)
+                response_db,data = opcoes_dao.update(opcao_schema)
+                self.logger.info(f"[{self.service.name}]Response DB OPCAO: {response_db.message} | Data OPCAO: {data.ticket}")
+        return id_boleta
+    def _new_boleta(self)->int:
+        response_db = Response()
+        with Connection(db,self.table_boletas) as conn:
+            with conn.open_session() as session:
+                boletas_dao:BoletasDAO = BoletasDAO(self.logger,self.service.name,session)
+                response_db,data = boletas_dao.create(data_db=BoletasSchema())
+                id_boleta = data.boleta_id
+                self.logger.info(f"[{self.service.name}]Response DB BOLETA: {response_db.message} | Data BOLETA: {data.boleta_id}")
+        return id_boleta

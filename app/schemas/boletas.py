@@ -4,4 +4,5 @@ from datetime import datetime
 
 class BoletasDB(BaseModel):
     boleta_id: Optional[int] = None
-    overall_delta: float
+    created: Optional[datetime]=None
+    updated: Optional[datetime]=None
